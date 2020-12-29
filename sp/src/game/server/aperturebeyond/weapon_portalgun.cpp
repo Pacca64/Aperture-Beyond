@@ -186,7 +186,7 @@ void CWeaponPortalgun::PrimaryAttack()
 	WeaponSound(SINGLE); //This makes our weapon emit the single show sound.
 	SendWeaponAnim(ACT_VM_PRIMARYATTACK); //This sends the animation for us shooting.
 	m_flNextPrimaryAttack = gpGlobals->curtime + m_flRateOfFire; //This defines when our next attack should be
-	AddViewKick(); //Don't forget to add our viewkick
+	//AddViewKick(); //Don't forget to add our viewkick
 }
 
 void CWeaponPortalgun::SecondaryAttack()
@@ -245,7 +245,7 @@ void CWeaponPortalgun::SecondaryAttack()
 	WeaponSound(WPN_DOUBLE); //This makes our weapon emit the single show sound.
 	SendWeaponAnim(ACT_VM_PRIMARYATTACK); //This sends the animation for us shooting.
 	m_flNextSecondaryAttack = gpGlobals->curtime + m_flRateOfFire; //This defines when our next attack should be
-	AddViewKick(); //Don't forget to add our viewkick
+	//AddViewKick(); //Don't forget to add our viewkick
 }
 
 void CWeaponPortalgun::AddViewKick()
