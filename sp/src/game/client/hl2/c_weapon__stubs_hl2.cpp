@@ -46,4 +46,10 @@ STUB_WEAPON_CLASS( weapon_oldmanharpoon, WeaponOldManHarpoon, C_WeaponCitizenPac
 #endif
 #endif
 
+//Custom
+STUB_WEAPON_CLASS(weapon_goof, WeaponGoof, CBaseHLCombatWeapon);
+STUB_WEAPON_CLASS(weapon_tutorial, WeaponTutorial, CBaseHLCombatWeapon);
+STUB_WEAPON_CLASS(weapon_gravtoggle, WeaponGravToggle, CBaseHLCombatWeapon);
+STUB_WEAPON_CLASS(weapon_portalgun, WeaponPortalgun, CBaseHLCombatWeapon);
+STUB_WEAPON_CLASS(weapon_oldshotgun, WeaponOldShotgun, C_BaseHLCombatWeapon);
 
