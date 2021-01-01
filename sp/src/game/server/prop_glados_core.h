@@ -29,12 +29,42 @@
 #define CORE_SOUNDFILENAME_ANGER "anger"
 #define CORE_SOUNDFILENAME_CAKE "cakemix"
 
-class CPropGladosCore : public CDynamicProp
+class CPropGladosCore : public CPhysicsProp
 {
 public:
-	DECLARE_CLASS(CPropGladosCore, CDynamicProp);
+	DECLARE_CLASS(CPropGladosCore, CPhysicsProp);
 
 	void Spawn();
+
+	//copied prop_dynamic routines
+	void	PropSetSequence(int nSequence);
+
+	// Input handlers
+	void InputSetAnimation(inputdata_t &inputdata);
+	void InputSetDefaultAnimation(inputdata_t &inputdata);
+	void InputTurnOn(inputdata_t &inputdata);
+	void InputTurnOff(inputdata_t &inputdata);
+	void InputDisableCollision(inputdata_t &inputdata);
+	void InputEnableCollision(inputdata_t &inputdata);
+	void InputSetPlaybackRate(inputdata_t &inputdata);
+
+	COutputEvent		m_pOutputAnimBegun;
+	COutputEvent		m_pOutputAnimOver;
+
+	string_t			m_iszDefaultAnim;
+
+	int					m_iGoalSequence;
+	int					m_iTransitionDirection;
+
+	// Random animations
+	bool				m_bRandomAnimator;
+	float				m_flNextRandAnim;
+	float				m_flMinRandAnimTime;
+	float				m_flMaxRandAnimTime;
+	short				m_nPendingSequence;
+
+	bool				m_bStartDisabled;
+	bool				m_bDisableBoneFollowers;
 
 private:
 	void Precache(void);
@@ -46,6 +76,10 @@ private:
 	void setupCoreVoiceLineDurations(float [], std::string, int);
 	void playCoreVoiceLine(std::string, int, bool);
 	void precacheCoreVoiceLines(std::string, int, bool);
+
+	//copied prop_dynamic routines
+	void FinishSetSequence(int nSequence);
+	void PropSetAnim(const char *szAnim);
 
 	float m_speechDelay;
 	int m_CoreType;

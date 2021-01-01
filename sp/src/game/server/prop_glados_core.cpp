@@ -191,6 +191,8 @@ void CPropGladosCore::Think(void){
 		m_lastVoiceLineTime = gpGlobals->curtime;
 	}
 
+	BaseClass::ClearFlagsThink();
+
 	// Think at 20Hz
 	SetNextThink(gpGlobals->curtime + 0.05f);
 }
@@ -261,7 +263,7 @@ void CPropGladosCore::AnimThink(void)
 
 	StudioFrameAdvance();
 	DispatchAnimEvents(this);
-	m_BoneFollowerManager.UpdateBoneFollowers(this);
+	//m_BoneFollowerManager.UpdateBoneFollowers(this);
 }
 
 //fills arrays for durations of voice lines
@@ -330,4 +332,120 @@ void CPropGladosCore::precacheCoreVoiceLines(std::string coreNameString, int lin
 
 		PrecacheScriptSound(finalSoundName.c_str());
 	}
+}
+
+/**
+*	Everything below here is copy paste from prop_dynamic. Cross your fingers!
+*/
+
+//-----------------------------------------------------------------------------
+// Purpose: Helper in case we have to async load the sequence
+// Input  : nSequence - 
+//-----------------------------------------------------------------------------
+void CPropGladosCore::FinishSetSequence(int nSequence)
+{
+	// Msg("%.2f CPropGladosCore::FinishSetSequence( %d )\n", gpGlobals->curtime, nSequence );
+	SetCycle(0);
+	m_flAnimTime = gpGlobals->curtime;
+	ResetSequence(nSequence);
+	ResetClientsideFrame();
+	RemoveFlag(FL_STATICPROP);
+	SetPlaybackRate(m_iTransitionDirection > 0 ? 1.0f : -1.0f);
+	SetCycle(m_iTransitionDirection > 0 ? 0.0f : 0.999f);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Sets the sequence and starts thinking.
+// Input  : nSequence - 
+//-----------------------------------------------------------------------------
+void CPropGladosCore::PropSetSequence(int nSequence)
+{
+	m_iGoalSequence = nSequence;
+
+	// Msg("%.2f CPropGladosCore::PropSetSequence( %d (%d:%.1f:%.3f)\n", gpGlobals->curtime, nSequence, GetSequence(), GetPlaybackRate(), GetCycle() );
+
+	int nNextSequence;
+	float nextCycle;
+	//float flInterval = 0.1f;
+
+	if (GotoSequence(GetSequence(), GetCycle(), GetPlaybackRate(), m_iGoalSequence, nNextSequence, nextCycle, m_iTransitionDirection))
+	{
+		FinishSetSequence(nNextSequence);
+	}
+
+	//SetThink(&CPropGladosCore::AnimThink);
+	//if (GetNextThink() <= gpGlobals->curtime)
+	//	SetNextThink(gpGlobals->curtime + flInterval);
+}
+
+// NOTE: To avoid risk, currently these do nothing about collisions, only visually on/off
+void CPropGladosCore::InputTurnOn(inputdata_t &inputdata)
+{
+	RemoveEffects(EF_NODRAW);
+}
+
+void CPropGladosCore::InputTurnOff(inputdata_t &inputdata)
+{
+	AddEffects(EF_NODRAW);
+}
+
+void CPropGladosCore::InputDisableCollision(inputdata_t &inputdata)
+{
+	AddSolidFlags(FSOLID_NOT_SOLID);
+}
+
+void CPropGladosCore::InputEnableCollision(inputdata_t &inputdata)
+{
+	RemoveSolidFlags(FSOLID_NOT_SOLID);
+}
+
+//------------------------------------------------------------------------------
+// Purpose: Sets an animation by sequence name or activity name.
+//------------------------------------------------------------------------------
+void CPropGladosCore::PropSetAnim(const char *szAnim)
+{
+	if (!szAnim)
+		return;
+
+	int nSequence = LookupSequence(szAnim);
+
+	// Set to the desired anim, or default anim if the desired is not present
+	if (nSequence > ACTIVITY_NOT_AVAILABLE)
+	{
+		PropSetSequence(nSequence);
+
+		// Fire output
+		m_pOutputAnimBegun.FireOutput(NULL, this);
+	}
+	else
+	{
+		// Not available try to get default anim
+		Warning("Dynamic prop %s: no sequence named:%s\n", GetDebugName(), szAnim);
+		SetSequence(0);
+	}
+}
+
+
+//------------------------------------------------------------------------------
+// Purpose:
+//------------------------------------------------------------------------------
+void CPropGladosCore::InputSetAnimation(inputdata_t &inputdata)
+{
+	PropSetAnim(inputdata.value.String());
+}
+
+//------------------------------------------------------------------------------
+// Purpose:
+//------------------------------------------------------------------------------
+void CPropGladosCore::InputSetDefaultAnimation(inputdata_t &inputdata)
+{
+	m_iszDefaultAnim = inputdata.value.StringID();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPropGladosCore::InputSetPlaybackRate(inputdata_t &inputdata)
+{
+	SetPlaybackRate(inputdata.value.Float());
 }
