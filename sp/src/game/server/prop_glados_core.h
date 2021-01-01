@@ -9,6 +9,7 @@
 #define	CORETYPE_ANGER 1			//The Anger Core.
 #define	CORETYPE_CAKE 2				//The Cake/logic Core.
 #define	CORETYPE_MORALITY 3			//The Morality Core.
+#define	CORETYPE_CUSTOM 4			//Custom. Enables use of extra keyvalues.
 
 /**
 *	Skin defintions
@@ -35,6 +36,23 @@ public:
 	DECLARE_CLASS(CPropGladosCore, CPhysicsProp);
 
 	void Spawn();
+
+	//Custom stuff for hammer users to play with
+	//custom animation names
+	const char *m_customTurnAnim;	
+	const char *m_customLookAnim;
+	const char *m_customDropAnim;
+	//custom sound file names
+	const char *m_customFileName;	//the custom file name. Should be the part before the number.
+	const char *m_customFileNameEnding;	//file name ending. FGD should default to ".wav". Don't think any other file type works.
+	bool	m_customFileName_HasLeadingZero;//whether the number in the file name should have a leading zero
+	//custom game sound names
+	const char *m_customSoundName;	//the custom game sound name. Should be the part before the number.
+	const char *m_customSoundNameEnding;	//game sound name ending. Can be left blank.
+	bool	m_customSoundName_HasLeadingZero; //whether the number in the sound name should have a leading zero
+	//Other sound info
+	int m_customNumberOfSoundsInLoop;
+
 
 	//copied prop_dynamic routines
 	void	PropSetSequence(int nSequence);
@@ -96,6 +114,7 @@ private:
 	float voiceLineDurationsCurious[18];
 	float voiceLineDurationsAnger[21];
 	float voiceLineDurationsCake[41];
+	float voiceLineDurationsCustom[200];
 
 	DECLARE_DATADESC();
 };

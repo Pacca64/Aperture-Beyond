@@ -14,8 +14,24 @@ DEFINE_FIELD(m_animJustEnded, FIELD_BOOLEAN),
 DEFINE_FIELD(m_voiceLineDuration, FIELD_FLOAT),
 DEFINE_FIELD(m_lastVoiceLineTime, FIELD_FLOAT),
 
+//Keyfields that replicate original entity
 DEFINE_KEYFIELD(m_speechDelay, FIELD_FLOAT, "DelayBetweenLines"),
 DEFINE_KEYFIELD(m_CoreType, FIELD_INTEGER, "CoreType"),
+
+//new "custom" fields, for mapping
+DEFINE_KEYFIELD(m_customTurnAnim, FIELD_STRING, "CustomTurnAnim"),
+DEFINE_KEYFIELD(m_customDropAnim, FIELD_STRING, "CustomDropAnim"),
+DEFINE_KEYFIELD(m_customLookAnim, FIELD_STRING, "CustomLookAnim"),
+
+DEFINE_KEYFIELD(m_customFileName, FIELD_STRING, "CustomSoundFileName"),
+DEFINE_KEYFIELD(m_customFileNameEnding, FIELD_STRING, "CustomSoundFileNameEnding"),
+DEFINE_KEYFIELD(m_customFileName_HasLeadingZero, FIELD_BOOLEAN, "CustomSoundFileNameHasLeadingZero"),
+//custom game sound names
+DEFINE_KEYFIELD(m_customSoundName, FIELD_STRING, "CustomGameSoundName"),
+DEFINE_KEYFIELD(m_customSoundNameEnding, FIELD_STRING, "CustomGameSoundNameEnding"),
+DEFINE_KEYFIELD(m_customSoundName_HasLeadingZero, FIELD_BOOLEAN, "CustomGameSoundNameHasLeadingZero"),
+
+DEFINE_KEYFIELD(m_customNumberOfSoundsInLoop, FIELD_INTEGER, "CustomNumberOfSounds"),
 
 // Declare our think function
 DEFINE_THINKFUNC(Think),
@@ -48,12 +64,34 @@ void CPropGladosCore::Precache(void)
 	precacheCoreVoiceLines(CORE_SOUNDSCRIPTNAME_CURIOUSITY, 17, false);
 	precacheCoreVoiceLines(CORE_SOUNDSCRIPTNAME_ANGER, 21, true);
 	precacheCoreVoiceLines(CORE_SOUNDSCRIPTNAME_CAKE, 41, true);
+	precacheCoreVoiceLines("custom", m_customNumberOfSoundsInLoop, m_customSoundName_HasLeadingZero);
 
 	BaseClass::Precache();
 }
 
 void CPropGladosCore::Spawn()
 {
+
+	//If custom sound name is set as the string "null"...
+	if (strcmp(m_customSoundName, "null") == 0){
+		m_customSoundName = "";	//set sound name to an empty string. Workaround for a crash related to setting empty string values.
+	}
+
+	//If custom sound name is set as the string "null"...
+	if (strcmp(m_customSoundNameEnding, "null") == 0){
+		m_customSoundNameEnding = "";	//set sound name to an empty string. Workaround for a crash related to setting empty string values.
+	}
+
+	//If custom sound name is set as the string "null"...
+	if (strcmp(m_customFileName, "null") == 0){
+		m_customFileName = "";	//set sound name to an empty string. Workaround for a crash related to setting empty string values.
+	}
+
+	//If custom sound name is set as the string "null"...
+	if (strcmp(m_customFileNameEnding, "null") == 0){
+		m_customFileNameEnding = "";	//set sound name to an empty string. Workaround for a crash related to setting empty string values.
+	}
+
 	Precache();
 
 	BaseClass::Spawn();
@@ -71,6 +109,7 @@ void CPropGladosCore::Spawn()
 	//}
 
 	ResetSequence(LookupSequence("drop"));
+	PropSetAnim("drop");
 
 	switch (m_CoreType){
 
@@ -89,6 +128,10 @@ void CPropGladosCore::Spawn()
 	case CORETYPE_CAKE:
 		m_nSkin = CORESKIN_CAKE;
 		break;
+
+	case CORETYPE_CUSTOM:
+		PropSetAnim(m_customDropAnim);
+		break;
 	}
 
 	m_isActive = false;
@@ -98,6 +141,7 @@ void CPropGladosCore::Spawn()
 	setupCoreVoiceLineDurations(voiceLineDurationsCurious, std::string(CORE_SOUNDFILENAME_CURIOUSITY), 18);
 	setupCoreVoiceLineDurations(voiceLineDurationsAnger, std::string(CORE_SOUNDFILENAME_ANGER), 21);
 	setupCoreVoiceLineDurations(voiceLineDurationsCake, std::string(CORE_SOUNDFILENAME_CAKE), 41);
+	setupCoreVoiceLineDurations(voiceLineDurationsCustom, std::string(CORE_SOUNDFILENAME_CAKE), m_customNumberOfSoundsInLoop);
 
 	SetThink(&CPropGladosCore::Think);
 	SetNextThink(gpGlobals->curtime + 0.1f);
@@ -132,6 +176,11 @@ void CPropGladosCore::Think(void){
 		case CORETYPE_CAKE:
 			PropSetAnim("look_04");
 			m_iszDefaultAnim = castable_string_t("look_04");
+			break;
+
+		case CORETYPE_CUSTOM:
+			PropSetAnim(m_customLookAnim);
+			m_iszDefaultAnim = castable_string_t(m_customLookAnim);
 			break;
 		}
 	}
@@ -182,6 +231,15 @@ void CPropGladosCore::Think(void){
 			hasLeadingZero = true;
 			m_voiceLineDuration = voiceLineDurationsCake[m_voiceLineNumber];
 		}
+		else if (m_CoreType == CORETYPE_CUSTOM){
+
+			if (m_voiceLineNumber >= m_customNumberOfSoundsInLoop){
+				m_voiceLineNumber = 0;
+			}
+
+			hasLeadingZero = m_customSoundName_HasLeadingZero;
+			m_voiceLineDuration = voiceLineDurationsCustom[m_voiceLineNumber];
+		}
 
 		//play the appropriate voice line based on correct core name string.
 		playCoreVoiceLine(coreNameString, m_voiceLineNumber, hasLeadingZero);
@@ -200,7 +258,14 @@ void CPropGladosCore::Think(void){
 //when player or physgun picks this up, do something
 void CPropGladosCore::OnPhysGunPickup(CBasePlayer *pPhysGunUser, PhysGunPickup_t reason){
 	if (m_isActive == false && m_isTurning == false){
-		PropSetAnim("turn");
+		
+		if (m_CoreType >= CORETYPE_CUSTOM){
+			PropSetAnim(m_customTurnAnim);
+		}
+		else {
+			PropSetAnim("turn");
+		}
+
 		m_isTurning = true;
 	}
 
@@ -274,7 +339,10 @@ void CPropGladosCore::setupCoreVoiceLineDurations(float voiceLineDurations[], st
 
 		std::string numeralString = std::to_string(i+1);
 
-		if (i+1 < 10){
+		if (i + 1 < 10 && m_CoreType != CORETYPE_CUSTOM){
+			numeralString = "0" + numeralString;
+		}
+		else if (i + 1 < 10 && m_customFileName_HasLeadingZero){
 			numeralString = "0" + numeralString;
 		}
 
@@ -285,6 +353,11 @@ void CPropGladosCore::setupCoreVoiceLineDurations(float voiceLineDurations[], st
 		std::string soundEndString = ".wav";
 
 		std::string finalSoundName = soundStartString + coreNameString + dash + numeralString + soundEndString;
+
+		//if custom core type, use hammer values instead.
+		if (m_CoreType == CORETYPE_CUSTOM){
+			finalSoundName = m_customFileName + numeralString + m_customFileNameEnding;
+		}
 
 		voiceLineDurations[i] = enginesound->GetSoundDuration(finalSoundName.c_str());
 		//DevMsg(finalSoundName.c_str());
@@ -305,6 +378,11 @@ void CPropGladosCore::playCoreVoiceLine(std::string coreNameString, int lineNum,
 	//number
 
 	std::string finalSoundName = soundStartString + coreNameString + dash + numeralString;
+
+	//if custom core type, use hammer values instead.
+	if (m_CoreType == CORETYPE_CUSTOM){
+		finalSoundName = m_customSoundName + numeralString + m_customSoundNameEnding;
+	}
 
 	DevMsg("playing glados core sound: ");
 	DevMsg(finalSoundName.c_str());
@@ -328,9 +406,14 @@ void CPropGladosCore::precacheCoreVoiceLines(std::string coreNameString, int lin
 
 		std::string finalSoundName = soundStartString + coreNameString + dash + numeralString;
 
-		//DevMsg("precaching glados core sound: ");
-		//DevMsg(finalSoundName.c_str());
-		//DevMsg("\n");
+		//if custom core type, use hammer values instead.
+		if (m_CoreType == CORETYPE_CUSTOM){
+			finalSoundName = m_customSoundName + numeralString + m_customSoundNameEnding;
+		}
+
+		DevMsg("precaching glados core sound: ");
+		DevMsg(finalSoundName.c_str());
+		DevMsg("\n");
 
 		PrecacheScriptSound(finalSoundName.c_str());
 	}
