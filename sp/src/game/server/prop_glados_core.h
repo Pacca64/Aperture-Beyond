@@ -8,10 +8,10 @@
 #define	CORESKIN_ANGER 2			//The Anger Core Skin.
 #define	CORESKIN_CAKE 3				//The Cake/logic Core Skin.
 
-class CPropGladosCore : public CPhysicsProp
+class CPropGladosCore : public CDynamicProp
 {
 public:
-	DECLARE_CLASS(CPropGladosCore, CPhysicsProp);
+	DECLARE_CLASS(CPropGladosCore, CDynamicProp);
 
 	void Spawn();
 
