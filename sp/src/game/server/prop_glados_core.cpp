@@ -61,14 +61,14 @@ void CPropGladosCore::Spawn()
 	AddSpawnFlags(SF_PHYSPROP_ENABLE_PICKUP_OUTPUT);	//set flag to enable player pickup for this physics prop
 
 	// Don't allow us to skip animation setup because our attachments are critical to us!
-	SetBoneCacheFlags(BCF_NO_ANIMATION_SKIP);
+	//SetBoneCacheFlags(BCF_NO_ANIMATION_SKIP);
 
-	CreateVPhysics();
+	//CreateVPhysics();
 
-	if (VPhysicsInitNormal(SOLID_VPHYSICS, 0, false) == NULL)
-	{
-		DevMsg("prop_glados_core unable to spawn physics object!\n");
-	}
+	//if (VPhysicsInitNormal(SOLID_VPHYSICS, 0, false) == NULL)
+	//{
+	//	DevMsg("prop_glados_core unable to spawn physics object!\n");
+	//}
 
 	ResetSequence(LookupSequence("drop"));
 
@@ -203,6 +203,8 @@ void CPropGladosCore::OnPhysGunPickup(CBasePlayer *pPhysGunUser, PhysGunPickup_t
 		PropSetAnim("turn");
 		m_isTurning = true;
 	}
+
+	BaseClass::OnPhysGunPickup(pPhysGunUser, reason);
 }
 
 //------------------------------------------------------------------------------
